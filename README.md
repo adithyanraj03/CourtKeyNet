@@ -40,16 +40,7 @@ This project is released under [MIT License](LICENSE), making it suitable for bo
 
 ## Citation
 
-If you find this work useful for your research, please consider citing:
-
-```
-@article{raj2025courtkeynet,
-  title={CourtKeyNet: A Novel Octave-Based Architecture for Badminton Court Detection with Geometric Constraints},
-  author={Raj, Adithya N},
-  journal={arXiv preprint},
-  year={2025}
-}
-```
+Formal citation information for this research will be provided upon completion of the manuscript and subsequent publication. Researchers interested in referencing this work in the interim period are encouraged to contact the authors directly.
 
 ## Contact
 
