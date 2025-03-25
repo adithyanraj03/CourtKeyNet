@@ -56,7 +56,7 @@ Formal citation information for this research will be provided upon completion o
 
 ## Contact
 
-For questions or collaboration opportunities, please contact Adithya N Raj at adithyanraj03@gmail.com
+For questions or collaboration opportunities, please contact at adithyanraj03@gmail.com
 
 ---
 
