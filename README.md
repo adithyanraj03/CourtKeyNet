@@ -22,7 +22,19 @@ Experimental validation demonstrates that CourtKeyNet significantly outperforms 
 - **Polar Transform Attention**: Enhances boundary detection by transforming features to polar space
 - **Quadrilateral Constraint Module**: Enforces geometric consistency among detected keypoints
 - **Geometric Consistency Loss**: Promotes proper quadrilateral properties during training
+## Dataset
+### Overview
+The CourtKeyNet dataset is available at: https://github.com/adithyanraj03/Paper_09_Data-Set_CourtKeyNet
 
+#### Dataset Characteristics
+- **Status**: Raw dataset
+- **Content**: Badminton court images for keypoint detection
+- **Annotation**: Requires manual annotation using the novel annotation tool provided in this repository
+
+### Data Annotation
+- A custom annotation tool is included in the repository to facilitate precise keypoint labeling
+- The tool is designed to support the unique requirements of badminton court keypoint detection
+- Researchers can use this tool to annotate the raw dataset with geometric keypoints
 ## Repository Structure
 
 The repository will include:
