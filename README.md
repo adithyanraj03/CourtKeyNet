@@ -7,14 +7,6 @@
 
 **This is an ongoing research project.** The repository will be progressively updated with implementation code, pre-trained models, and comprehensive documentation as the research advances toward publication. Thank you for your interest in this work.
 
-
-## Key Innovations
-
-- **Octave Feature Extractor**: Processes visual information at multiple frequency bands simultaneously to capture both fine details and global structure
-- **Polar Transform Attention**: Enhances boundary detection by transforming features to polar space
-- **Quadrilateral Constraint Module**: Enforces geometric consistency among detected keypoints
-- **Geometric Consistency Loss**: Promotes proper quadrilateral properties during training
-
 ## Dataset
 ### Overview
 The CourtKeyNet dataset is available at: https://github.com/adithyanraj03/Paper_09_Data-Set_CourtKeyNet
