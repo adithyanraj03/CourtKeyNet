@@ -1,5 +1,3 @@
-# CourtKeyNet
-
 
 ![CourtKeyNet Architecture](https://github.com/adithyanraj03/courtkeynet/raw/main/images/architecture.png)
 
