@@ -23,11 +23,10 @@ The CourtKeyNet dataset is available at: https://github.com/adithyanraj03/Paper_
 The repository will include:
 
 - PyTorch implementation of the CourtKeyNet architecture
-- Training and evaluation scripts
+- Training  scripts
 - Pre-trained models for various scenarios
 - Custom-built annotation tool for court keypoint labeling
 - Comprehensive dataset with precise keypoint annotations
-- Evaluation metrics and comparison with state-of-the-art methods
 
 ## License
 
