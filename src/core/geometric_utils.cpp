@@ -1,97 +1,131 @@
-import tkinter as tk
-from tkinter import ttk, filedialog
+#include "core/geometric_utils.h"
+#include <cmath>
+#include <vector>
 
-def create_control_panel(app):
-    """
-    Create the control panel for the annotation tool.
+namespace courtkeynet {
+namespace core {
+
+Tensor GeometricUtils::computeAngles(const Tensor& points) {
+    // points shape: [batch_size, num_points, 2]
+    int batch_size = points.shape[0];
+    int num_points = points.shape[1];
     
-    Args:
-        app: AnnotationTool instance
-    """
-    # Create annotation controls
-    control_frame = ttk.Frame(app.bottom_frame)
-    control_frame.pack(fill=tk.X, pady=5)
+    // Output shape: [batch_size, num_points]
+    Tensor angles(batch_size, num_points);
     
-    # Class selection
-    class_frame = ttk.Frame(control_frame)
-    class_frame.pack(side=tk.LEFT, padx=10)
+    for (int b = 0; b < batch_size; ++b) {
+        for (int i = 0; i < num_points; ++i) {
+            // Get vectors to previous and next points
+            int prev_idx = (i - 1 + num_points) % num_points;
+            int next_idx = (i + 1) % num_points;
+            
+            // Vector from current point to previous point
+            float prev_x = points.at(b, prev_idx, 0) - points.at(b, i, 0);
+            float prev_y = points.at(b, prev_idx, 1) - points.at(b, i, 1);
+            
+            // Vector from current point to next point
+            float next_x = points.at(b, next_idx, 0) - points.at(b, i, 0);
+            float next_y = points.at(b, next_idx, 1) - points.at(b, i, 1);
+            
+            // Compute dot product
+            float dot = prev_x * next_x + prev_y * next_y;
+            
+            // Compute magnitudes
+            float prev_mag = std::sqrt(prev_x * prev_x + prev_y * prev_y);
+            float next_mag = std::sqrt(next_x * next_x + next_y * next_y);
+            
+            // Compute cosine
+            float cos_theta = dot / (prev_mag * next_mag);
+            
+            // Clamp to valid range for acos
+            cos_theta = std::max(-1.0f, std::min(1.0f, cos_theta));
+            
+            // Compute angle in radians and convert to degrees
+            float angle = std::acos(cos_theta) * 180.0f / M_PI;
+            
+            angles.at(b, i) = angle;
+        }
+    }
     
-    class_label = ttk.Label(class_frame, text="Court Class:")
-    class_label.pack(side=tk.LEFT, padx=5)
+    return angles;
+}
+
+Tensor GeometricUtils::computeEdgeLengths(const Tensor& points) {
+    // points shape: [batch_size, num_points, 2]
+    int batch_size = points.shape[0];
+    int num_points = points.shape[1];
     
-    app.class_var = tk.IntVar(value=0)
+    // Output shape: [batch_size, num_points]
+    Tensor edge_lengths(batch_size, num_points);
     
-    rb_class0 = ttk.Radiobutton(class_frame, text="Standard", variable=app.class_var, value=0)
-    rb_class0.pack(side=tk.LEFT)
+    for (int b = 0; b < batch_size; ++b) {
+        for (int i = 0; i < num_points; ++i) {
+            int next_idx = (i + 1) % num_points;
+            
+            float dx = points.at(b, next_idx, 0) - points.at(b, i, 0);
+            float dy = points.at(b, next_idx, 1) - points.at(b, i, 1);
+            
+            edge_lengths.at(b, i) = std::sqrt(dx * dx + dy * dy);
+        }
+    }
     
-    rb_class1 = ttk.Radiobutton(class_frame, text="Doubles", variable=app.class_var, value=1)
-    rb_class1.pack(side=tk.LEFT)
+    return edge_lengths;
+}
+
+Tensor GeometricUtils::computeDiagonals(const Tensor& points) {
+    // points shape: [batch_size, 4, 2] - Assuming quadrilateral
+    int batch_size = points.shape[0];
     
-    rb_class2 = ttk.Radiobutton(class_frame, text="Alternative", variable=app.class_var, value=2)
-    rb_class2.pack(side=tk.LEFT)
+    // Output shape: [batch_size, 2] - Two diagonals per quadrilateral
+    Tensor diagonals(batch_size, 2);
     
-    # Actions
-    action_frame = ttk.Frame(control_frame)
-    action_frame.pack(side=tk.RIGHT, padx=10)
+    for (int b = 0; b < batch_size; ++b) {
+        // Diagonal 1-3
+        float dx1 = points.at(b, 0, 0) - points.at(b, 2, 0);
+        float dy1 = points.at(b, 0, 1) - points.at(b, 2, 1);
+        diagonals.at(b, 0) = std::sqrt(dx1 * dx1 + dy1 * dy1);
+        
+        // Diagonal 2-4
+        float dx2 = points.at(b, 1, 0) - points.at(b, 3, 0);
+        float dy2 = points.at(b, 1, 1) - points.at(b, 3, 1);
+        diagonals.at(b, 1) = std::sqrt(dx2 * dx2 + dy2 * dy2);
+    }
     
-    btn_clear = ttk.Button(action_frame, text="Clear", command=app.clear_annotation)
-    btn_clear.pack(side=tk.LEFT, padx=5)
+    return diagonals;
+}
+
+Tensor GeometricUtils::computeInternalAngles(const Tensor& points) {
+    return computeAngles(points);
+}
+
+Tensor GeometricUtils::normalizeSum(const Tensor& input, int dim) {
+    int batch_size = input.shape[0];
+    int size_dim = input.shape[dim];
     
-    btn_undo = ttk.Button(action_frame, text="Undo", command=app.undo)
-    btn_undo.pack(side=tk.LEFT, padx=5)
+    Tensor output = input.clone();
     
-    btn_redo = ttk.Button(action_frame, text="Redo", command=app.redo)
-    btn_redo.pack(side=tk.LEFT, padx=5)
+    // Only supporting dim=1 for now
+    if (dim != 1) {
+        throw std::runtime_error("normalizeSum only supports dim=1 currently");
+    }
     
-    btn_save = ttk.Button(action_frame, text="Save", command=app.save_annotations)
-    btn_save.pack(side=tk.LEFT, padx=5)
+    for (int b = 0; b < batch_size; ++b) {
+        // Compute sum
+        float sum = 0.0f;
+        for (int i = 0; i < size_dim; ++i) {
+            sum += input.at(b, i);
+        }
+        
+        // Normalize
+        if (sum > 0) {
+            for (int i = 0; i < size_dim; ++i) {
+                output.at(b, i) = input.at(b, i) / sum;
+            }
+        }
+    }
     
-    # Video conversion controls
-    video_frame = ttk.LabelFrame(app.bottom_frame, text="Video Conversion Settings")
-    video_frame.pack(fill=tk.X, pady=5, padx=10)
-    
-    settings_frame = ttk.Frame(video_frame)
-    settings_frame.pack(fill=tk.X, pady=5)
-    
-    # Frame rate
-    frame_rate_label = ttk.Label(settings_frame, text="Frame Rate:")
-    frame_rate_label.grid(row=0, column=0, padx=5, pady=2, sticky=tk.W)
-    
-    app.frame_rate_var = tk.DoubleVar(value=1.0)
-    frame_rate_entry = ttk.Entry(settings_frame, textvariable=app.frame_rate_var, width=8)
-    frame_rate_entry.grid(row=0, column=1, padx=5, pady=2, sticky=tk.W)
-    
-    frame_rate_help = ttk.Label(settings_frame, text="fps (0 = extract all frames)")
-    frame_rate_help.grid(row=0, column=2, padx=5, pady=2, sticky=tk.W)
-    
-    # Max frames
-    max_frames_label = ttk.Label(settings_frame, text="Max Frames:")
-    max_frames_label.grid(row=0, column=3, padx=5, pady=2, sticky=tk.W)
-    
-    app.max_frames_var = tk.IntVar(value=100)
-    max_frames_entry = ttk.Entry(settings_frame, textvariable=app.max_frames_var, width=8)
-    max_frames_entry.grid(row=0, column=4, padx=5, pady=2, sticky=tk.W)
-    
-    max_frames_help = ttk.Label(settings_frame, text="(0 = no limit)")
-    max_frames_help.grid(row=0, column=5, padx=5, pady=2, sticky=tk.W)
-    
-    # Resize
-    resize_label = ttk.Label(settings_frame, text="Resize:")
-    resize_label.grid(row=1, column=0, padx=5, pady=2, sticky=tk.W)
-    
-    resize_frame = ttk.Frame(settings_frame)
-    resize_frame.grid(row=1, column=1, columnspan=2, padx=5, pady=2, sticky=tk.W)
-    
-    app.resize_width_var = tk.IntVar(value=0)
-    resize_width_entry = ttk.Entry(resize_frame, textvariable=app.resize_width_var, width=6)
-    resize_width_entry.pack(side=tk.LEFT)
-    
-    resize_x_label = ttk.Label(resize_frame, text="x")
-    resize_x_label.pack(side=tk.LEFT, padx=2)
-    
-    app.resize_height_var = tk.IntVar(value=0)
-    resize_height_entry = ttk.Entry(resize_frame, textvariable=app.resize_height_var, width=6)
-    resize_height_entry.pack(side=tk.LEFT)
-    
-    resize_help = ttk.Label(settings_frame, text="(0,0 = original size)")
-    resize_help.grid(row=1, column=3, columnspan=3, padx=5, pady=2, sticky=tk.W)
+    return output;
+}
+
+}  // namespace core
+}  // namespace courtkeynet
