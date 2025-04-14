@@ -26,7 +26,7 @@ The repository will include:
 - Training  scripts
 - Pre-trained models for various scenarios
 - Custom-built annotation tool for court keypoint labeling
-- Comprehensive dataset with precise keypoint annotations
+- Comprehensive dataset collection 
 
 ## License
 
