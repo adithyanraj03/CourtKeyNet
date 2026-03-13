@@ -1,0 +1,6 @@
+[submodule "Paper_09_Data-Set_CourtKeyNet"]
+	path = Paper_09_Data-Set_CourtKeyNet
+	url = https://github.com/adithyanraj03/Paper_09_Data-Set_CourtKeyNet
+[submodule "datasets"]
+	path = datasets
+	url = https://github.com/adithyanraj03/Paper_09_Data-Set_CourtKeyNet
