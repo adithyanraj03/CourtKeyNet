@@ -1,0 +1,25 @@
+# Dataset Configuration
+# Paths relative to dataset root
+train: train/images
+val: valid/images
+test: test/images
+
+# Keypoint configuration (YOLO Pose format)
+kpt_shape: [4, 3]  # 4 keypoints, (x, y, visibility)
+flip_idx: [0, 1, 2, 3]  # No flipping for court corners
+
+# Classes
+nc: 1
+names: ['court']
+
+# Data augmentation (manuscript values)
+augment: true
+hsv_h: 0.015
+hsv_s: 0.7
+hsv_v: 0.4
+degrees: 5.0
+translate: 0.1
+scale: 0.3
+perspective: 0.0001
+flipud: 0.0
+fliplr: 0.0  # Courts are symmetric but we disable to avoid label errors

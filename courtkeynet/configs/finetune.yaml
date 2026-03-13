@@ -1,0 +1,103 @@
+# Fine-tuning Configuration for CourtKeyNet
+# Uses clean 7k+ dataset to polish pretrained model
+
+model:
+  name: "CourtKeyNet"
+  
+  # Octave Feature Extractor
+  ofe:
+    channels_per_band: 64
+    stem_channels: 64
+    
+  # Polar Transform Attention  
+  pta:
+    enabled: true
+    radial_bins: 64
+    angular_bins: 128
+    
+  # Keypoint Localization
+  heatmap_sigma: 8.0
+  num_keypoints: 4
+  feature_dim: 128
+  
+  # Transformer Refinement
+  transformer:
+    num_layers: 2
+    num_heads: 4
+    dim_feedforward: 512
+    dropout: 0.1
+    
+  # Quadrilateral Constraint Module
+  qcm:
+    hidden_dims: [64, 128]
+    output_dim: 128
+
+# Fine-tuning Configuration
+train:
+  epochs: 100                # Fewer epochs needed for fine-tuning
+  batch_size: 48             # Can use larger batch with smaller dataset
+  num_workers: 4
+  imgsz: 640
+  early_stopping_patience: 20  # More patience since we fixed the data
+  
+  # Higher LR for fine-tuning (dataset was too different, need more adaptation)
+  optimizer: "adamw"
+  lr0: 0.0001                # 1e-4 (higher to adapt to new domain)
+  lrf: 0.01                  # Final LR = 1e-6
+  weight_decay: 0.01         # Slightly higher regularization
+  momentum: 0.937
+  
+  # LR Scheduler
+  warmup_epochs: 3           # Short warmup
+  scheduler: "cosine"
+  
+  # Loss Weights - Enable geometric losses for precision
+  loss_weights:
+    keypoint: 10.0           # Primary coordinate loss
+    heatmap: 10.0            # Reduced (model already knows heatmaps)
+    edge: 1.0                # Enable geometric constraints
+    diagonal: 1.0            # Enable geometric constraints
+    angle: 1.0               # Enable geometric constraints
+  
+  # Geometric loss warmup (linearly scale geo losses over N epochs)
+  geo_warmup_epochs: 10
+  
+  # Training Tricks
+  mixed_precision: true
+  grad_clip: 5.0             # More aggressive clipping for stability
+  ema_decay: 0.9999
+  
+  # Checkpointing
+  save_interval: 10
+  save_best: true
+  
+  # Paths
+  project: "runs/courtkeynet_finetune"
+  name: "finetune"
+
+# Validation
+val:
+  batch_size: 32
+  interval: 1                # Validate every epoch
+
+# Dataset Augmentation - Less aggressive for clean data
+dataset:
+  hsv_h: 0.005               # Minimal color jitter
+  hsv_s: 0.2
+  hsv_v: 0.2
+  degrees: 3.0               # Smaller rotation
+  translate: 0.05            # Smaller translation
+  scale: 0.1                 # Smaller scale variation
+  flipud: 0.0                # No vertical flip
+  fliplr: 0.0                # No horizontal flip (preserve corner order)
+
+# Weights & Biases Configuration
+wandb:
+  enabled: true
+  project: "courtkeynet"
+  name: "CourtKeyNet-Finetune"
+  tags: ["finetune", "clean-data", "7k-dataset"]
+  log_freq: 50
+
+# Device
+device: "cuda"
