@@ -38,7 +38,7 @@ Excited to introduce **CourtKeyNet**, an open-sourced deep learning architecture
 The datasets utilized for CourtKeyNet are located in the `datasets` folder, which is linked as a submodule to the primary dataset repository:
 - [CourtKeyNet Dataset GitHub Repository](https://github.com/adithyanraj03/Paper_09_Data-Set_CourtKeyNet)
 
-*Note: The dataset contains badminton court images for keypoint detection and main repository has the custom annotation tool for geometric keypoints labeling.*
+*Note: The dataset contains badminton court images for keypoint detection, and the main repository contains the custom annotation tool for geometric keypoints labeling.*
 
 ## Installation & Setup
 
@@ -173,7 +173,7 @@ CourtKeyNet/
 │   │   └── geometric_loss.py    # Geometric Consistency Loss
 │   ├── utils/
 │   │   ├── __init__.py
-│   │   ├── dataloader.py        # YOLO pose dataset loader
+│   │   ├── dataloader.py        # dataset loader
 │   │   └── metrics.py           # Evaluation metrics
 │   ├── train.py                 # Training script with wandb
 │   ├── finetune.py              # Finetuning script
@@ -201,14 +201,27 @@ huggingface-cli download Cracked-ANJ/CourtKeyNet --local-dir ./courtkeynet-base
 
 The training scripts are located within the `courtkeynet/` directory.
 
-### Basic Training
+### Fine-Tuning Pre-trained Weights (Recommended)
+If you downloaded the HuggingFace weights, use `finetune.py` to adapt the model to your specific dataset:
+```bash
+cd courtkeynet
+python finetune.py
+```
+*(Note: The pre-trained weights are explicitly trained on badminton court and tennis court images.)*
 
+### Train from Scratch
+To train a completely new model from scratch, use `train.py`:
 ```bash
 cd courtkeynet
 python train.py --data_root path/to/dataset
 ```
+*(Note: Training from scratch requires a minimum of 140,000 images for the model to learn features effectively. Fine-tuning to any court or similar geometry requires only 5,000 to 7,000 images.)*
 
 ### With Custom Config
+
+Depending on your workflow, you can specify custom configurations. There are two provided configurations:
+- `configs/courtkeynet.yaml`: The primary configuration for training dynamically from scratch.
+- `configs/finetune.yaml`: Tailored automatically for fine-tuning pre-trained weights *(automatically loaded by `finetune.py`)*.
 
 ```bash
 cd courtkeynet
@@ -229,19 +242,18 @@ python train.py \
 
 ## Inference
 
+To open the CourtKeyNet Inference Studio (GUI), run:
 ```bash
 cd courtkeynet
-python inference.py \
-    --weights runs/courtkeynet/exp/best.pt \
-    --source path/to/images \
-    --output runs/predictions
+python inference.py
 ```
+*(Note: The application will open a graphical interface allowing you to easily select both your model weights and target media files directly through the GUI menus).*
 
 ## Architecture Details
 
 ### Octave Feature Extractor (Section 3.2)
 Processes visual information at multiple frequency bands:
-- **High-frequency path**: Fine court details using Court-Specific Shape Kernels
+- **High-frequency path**: Fine court details using Court-Specific Shape Kernels. *(Note: To optimize learning, explicit L-shaped boundary kernels are turned off when training from scratch, as enforcing them too early hinders the model's ability to grasp broader contextual features and textures. They are meant to be utilized primarily during fine-tuning).*
 - **Mid-frequency path**: Structural patterns with Non-Local Self-Similarity
 - **Low-frequency path**: Global context via Fourier Feature Encoder
 
@@ -256,11 +268,19 @@ L_total = λ_kpt·L_kpt + λ_hm·L_hm + λ_edge·L_edge + λ_diag·L_diag + λ_a
 
 ## Expected Training Time
 
-| GPU | Batch Size | Time/Epoch | Total (120 epochs) |
-|-----|------------|------------|-------------------|
-| RTX 5090 | 32 | ~8 min | ~16 hours |
-| RTX 4090 | 24 | ~12 min | ~24 hours |
-| RTX 3090 | 16 | ~18 min | ~36 hours |
+### Train from Scratch (140k+ dataset)
+| GPU | Batch Size | Total Duration (120 epochs) |
+|-----|------------|-------------------|
+| RTX 5090 | 32 | ~48 hours (2 Days) |
+| RTX 4090 | 24 | ~72 hours (3 Days) |
+| RTX 3090 | 16 | ~108 hours (4.5 Days) |
+
+### Fine-Tuning (7k clean dataset)
+| GPU | Batch Size | Total Duration |
+|-----|------------|-------------------|
+| RTX 5090 | 32 | ~35 hours (~1.4 Days) |
+| RTX 4090 | 24 | ~52 hours (~2.2 Days) |
+| RTX 3090 | 16 | ~79 hours (~3.3 Days) |
 
 ## Citation
 
