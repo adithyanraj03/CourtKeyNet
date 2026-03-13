@@ -59,20 +59,6 @@ pip install -r requirements.txt
 # 4. Login to Weights & Biases (optional, for experiment tracking)
 wandb login
 ```
-
-### Model Download
-
-| Model | Details | Resolution | Download Links |
-| :---  | :--- | :--- | :--- |
-| **CourtKeyNet-Base** | Full Architecture | Native | 🤗 [HuggingFace](https://huggingface.co/Cracked-ANJ/CourtKeyNet) |
-| **CourtKeyNet-Fast** | Light Architecture | Native | *To be released* |
-
-Download models using huggingface-cli:
-```sh
-pip install "huggingface_hub[cli]"
-huggingface-cli download Cracked-ANJ/CourtKeyNet --local-dir ./courtkeynet-base
-```
-
 <details open>
 <summary style="font-size: 1.4em; color: #4169e1; font-weight: bold; cursor: pointer;">Click to hide: How Confidence Detection Works (Visual Explanation)</summary>
 
@@ -196,6 +182,20 @@ CourtKeyNet/
 ├── requirements.txt
 └── README.md
 ```
+
+### Model Download
+
+| Model | Details | Resolution | Download Links |
+| :---  | :--- | :--- | :--- |
+| **CourtKeyNet-Base** | Full Architecture | Native | 🤗 [HuggingFace](https://huggingface.co/Cracked-ANJ/CourtKeyNet) |
+| **CourtKeyNet-Fast** | Light Architecture | Native | *To be released* |
+
+Download models using huggingface-cli:
+```sh
+pip install "huggingface_hub[cli]"
+huggingface-cli download Cracked-ANJ/CourtKeyNet --local-dir ./courtkeynet-base
+```
+
 
 ## Training
 
