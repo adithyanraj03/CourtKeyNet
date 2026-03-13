@@ -207,7 +207,7 @@ class ConfidenceCalculator:
 class CourtKeyNetTesterV3:
     def __init__(self, root):
         self.root = root
-        self.root.title("CourtKeyNet Inference Studio v3 - With Confidence")
+        self.root.title("CourtKeyNet Inference Studio")
         self.root.geometry("1100x800")
         
         # Colors
@@ -249,7 +249,7 @@ class CourtKeyNetTesterV3:
         self.use_geometric_conf = tk.BooleanVar(value=True)
         self.use_entropy_conf = tk.BooleanVar(value=True)
         self.opacity = 0.4  # Increased opacity
-        self.show_always = tk.BooleanVar(value=True)  # Show even low confidence
+        self.hide_low_conf = tk.BooleanVar(value=False)  # Hide detections below threshold
         
         self.confidence_calc = ConfidenceCalculator()
         
@@ -260,7 +260,7 @@ class CourtKeyNetTesterV3:
         header_frame = ttk.Frame(self.root, style="Panel.TFrame")
         header_frame.pack(fill="x", padx=0, pady=0)
         
-        title = tk.Label(header_frame, text="🏸 CourtKeyNet v3 - Confidence-Aware Detection", 
+        title = tk.Label(header_frame, text="🏸 CourtKeyNet Inference Studio", 
                          bg=self.colors["accent"], fg="white", 
                          font=("Segoe UI", 14, "bold"), pady=12)
         title.pack(fill="x")
@@ -324,8 +324,8 @@ class CourtKeyNetTesterV3:
                       bg=self.colors["panel"], fg="white", selectcolor=self.colors["accent"],
                       activebackground=self.colors["panel"]).pack(anchor="w")
         
-        # Show always option
-        tk.Checkbutton(conf_frame, text="Show low-conf (red)", variable=self.show_always,
+        # Hide low confidence option
+        tk.Checkbutton(conf_frame, text="Hide detections below threshold", variable=self.hide_low_conf,
                       bg=self.colors["panel"], fg="white", selectcolor=self.colors["accent"],
                       activebackground=self.colors["panel"]).pack(anchor="w", pady=(5,0))
 
@@ -503,8 +503,8 @@ class CourtKeyNetTesterV3:
         """Draw court with confidence-based coloring"""
         threshold = self.conf_threshold.get()
         
-        # Skip if below threshold and not showing always
-        if confidence < threshold and not self.show_always.get():
+        # Skip if below threshold and hide is selected
+        if confidence < threshold and self.hide_low_conf.get():
             # Draw a small indicator that detection was skipped
             cv2.putText(img, f"No confident detection ({confidence:.2f})", 
                        (10, img.shape[0] - 20), cv2.FONT_HERSHEY_SIMPLEX, 
@@ -593,7 +593,7 @@ class CourtKeyNetTesterV3:
 
     def run_inference_loop(self):
         source = self.source_path.get()
-        cv2.namedWindow("CourtKeyNet Live", cv2.WINDOW_NORMAL)
+        cv2.namedWindow("CourtKeyNet Inference Studio", cv2.WINDOW_NORMAL)
         
         if self.source_type == 'video':
             cap = cv2.VideoCapture(source)
@@ -602,7 +602,7 @@ class CourtKeyNetTesterV3:
                 if not ret: break
                 
                 processed = self.process_frame(frame)
-                cv2.imshow("CourtKeyNet Live", processed)
+                cv2.imshow("CourtKeyNet Inference Studio", processed)
                 if cv2.waitKey(1) & 0xFF == ord('q'): break
             cap.release()
             
@@ -610,7 +610,7 @@ class CourtKeyNetTesterV3:
             frame = cv2.imread(source)
             if frame is not None:
                 processed = self.process_frame(frame)
-                cv2.imshow("CourtKeyNet Live", processed)
+                cv2.imshow("CourtKeyNet Inference Studio", processed)
                 while self.is_running:
                     if cv2.waitKey(100) & 0xFF == ord('q'): break
                     
@@ -641,7 +641,7 @@ class CourtKeyNetTesterV3:
                     cv2.putText(processed, f"{os.path.basename(img_path)} ({idx+1}/{len(images)})", 
                                (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
                     
-                    cv2.imshow("CourtKeyNet Live", processed)
+                    cv2.imshow("CourtKeyNet Inference Studio", processed)
                     
                     key = cv2.waitKey(0 if paused else 2000) & 0xFF
                     
