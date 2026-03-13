@@ -28,7 +28,7 @@ Excited to introduce **CourtKeyNet**, an open-sourced deep learning architecture
 
 ## 🎬 Video Demo
 <div align="center">
-  <video src="assets/demo.mp4" width="100%" poster=""> </video>
+  <img src="assets/demo.gif" width="100%" alt="CourtKeyNet Video Demo" />
 </div>
 
 
@@ -73,8 +73,8 @@ pip install "huggingface_hub[cli]"
 huggingface-cli download Cracked-ANJ/CourtKeyNet --local-dir ./courtkeynet-base
 ```
 
-<details>
-<summary style="font-size: 1.4em; color: #4169e1; font-weight: bold; cursor: pointer;">Click to expand: How Confidence Detection Works (Visual Explanation)</summary>
+<details open>
+<summary style="font-size: 1.4em; color: #4169e1; font-weight: bold; cursor: pointer;">Click to hide: How Confidence Detection Works (Visual Explanation)</summary>
 
 # How Confidence Detection Works 
 
