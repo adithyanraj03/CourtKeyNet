@@ -165,8 +165,8 @@ Checklist:
 
 Download models using huggingface-cli:
 ```sh
-pip install "huggingface_hub[cli]"
-huggingface-cli download Cracked-ANJ/CourtKeyNet --local-dir ./courtkeynet-base
+pip install -U huggingface_hub
+hf download Cracked-ANJ/CourtKeyNet --local-dir ./courtkeynet-weights
 ```
 
 
