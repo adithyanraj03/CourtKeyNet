@@ -161,7 +161,7 @@ Checklist:
 | Model | Details | Resolution | Download Links |
 | :---  | :--- | :--- | :--- |
 | **CourtKeyNet-Base** | Full Architecture | Native | 🤗 [HuggingFace](https://huggingface.co/Cracked-ANJ/CourtKeyNet) |
-| **CourtKeyNet-Fast** | Light Architecture | Native | *To be released* |
+| **CourtKeyNet-Fast** | Light Architecture | Native |🤗 [HuggingFace](https://huggingface.co/Cracked-ANJ/CourtKeyNet) |
 
 Download models using huggingface-cli:
 ```sh
