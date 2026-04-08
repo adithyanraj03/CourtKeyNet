@@ -3,7 +3,7 @@ from tkinter import filedialog, Listbox, Scrollbar
 from PIL import Image, ImageTk, ImageDraw
 import os
 
-class YOLOViewerApp:
+class ViewerApp:
     def __init__(self, root):
         self.root = root
         self.root.title("Badminton Court Annotation Viewer")
@@ -180,6 +180,6 @@ class YOLOViewerApp:
 
 if __name__ == "__main__":
     root = tk.Tk()
-    app = YOLOViewerApp(root)
+    app = ViewerApp(root)
     root.mainloop()
 

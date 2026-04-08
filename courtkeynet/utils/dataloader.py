@@ -1,5 +1,6 @@
 """
-YOLO Pose Format Dataset Loader
+Dataset loader for court keypoint annotations, follows a similar 
+structure to the YOLO Pose format (class cx cy w h kx ky v ...).
 """
 import cv2
 import numpy as np
@@ -12,7 +13,7 @@ from tqdm import tqdm
 
 class CourtKeypointDataset(Dataset):
     """
-    Loads YOLO pose labels: class cx cy w h kx1 ky1 v1 ... kx4 ky4 v4
+    Loads pose labels: class cx cy w h kx1 ky1 v1 ... kx4 ky4 v4
     """
     def __init__(self, root, split='train', imgsz=640, augment=False, config=None, 
                  validate_labels=False, skip_flipped=False):
