@@ -125,7 +125,7 @@ class ViewerApp:
                     parts = list(map(float, line.strip().split()))
                     
                     # --- KEYPOINT DRAWING ---
-                    # YOLO Pose format: class x y w h px1 py1 v1 px2 py2 v2 ...
+                    # Pose format: class x y w h px1 py1 v1 px2 py2 v2 ...
                     if len(parts) > 5:
                         keypoints = parts[5:]
                         num_kpts = len(keypoints) // 3

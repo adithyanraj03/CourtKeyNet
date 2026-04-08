@@ -4,7 +4,7 @@ train: train/images
 val: valid/images
 test: test/images
 
-# Keypoint configuration (YOLO Pose format)
+# Keypoint configuration
 kpt_shape: [4, 3]  # 4 keypoints, (x, y, visibility)
 flip_idx: [0, 1, 2, 3]  # No flipping for court corners
 

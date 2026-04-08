@@ -20,10 +20,10 @@ import tkinter as tk
 from tkinter import filedialog
 
 
-def read_yolo_keypoints(label_path, w, h):
+def read_keypoints(label_path, w, h):
     """
-    Reads a YOLO format keypoint file.
-    YOLO Keypoint Format: 
+    Reads a pose keypoint label file.
+    Format: 
     <class> <cx> <cy> <bw> <bh> <kp1_x> <kp1_y> <kp1_vis> <kp2_x> ...
 
     Returns: 
@@ -88,7 +88,7 @@ def compute_bbox_from_keypoints(keypoints, w, h, padding=0.05):
     y_min = max(0, y_min - pad_y)
     y_max = min(h, y_max + pad_y)
 
-    # Convert to YOLO format (normalized cx, cy, bw, bh)
+    # Convert to normalized format (cx, cy, bw, bh)
     cx = (x_min + x_max) / 2 / w
     cy = (y_min + y_max) / 2 / h
     bw = (x_max - x_min) / w
@@ -122,9 +122,9 @@ def clamp_keypoints(keypoints, w, h):
     return clamped
 
 
-def save_yolo_keypoints(save_path, keypoints, meta, w, h):
+def save_keypoints(save_path, keypoints, meta, w, h):
     """
-    Saves keypoints back to YOLO format.
+    Saves keypoints back to label format.
     Recomputes bbox from keypoints for accuracy.
     """
     class_id, _, visibilities = meta
@@ -272,7 +272,7 @@ def augment_dataset(
         name_no_ext = Path(file_path).stem
         label_path = os.path.join(label_dir, name_no_ext + ".txt")
 
-        keypoints, meta = read_yolo_keypoints(label_path, w, h)
+        keypoints, meta = read_keypoints(label_path, w, h)
         if keypoints is None:
             stats['skipped_no_label'] += 1
             continue
@@ -303,7 +303,7 @@ def augment_dataset(
                 # Save augmented label
                 new_label_name = f"{name_no_ext}_{suffix}.txt"
                 save_label_path = os.path.join(output_label_dir, new_label_name)
-                save_yolo_keypoints(save_label_path, aug_kpts, meta, w, h)
+                save_keypoints(save_label_path, aug_kpts, meta, w, h)
 
                 stats['augmented'] += 1
 
@@ -348,7 +348,7 @@ def verify_augmentation(img_dir, label_dir, num_samples=5):
         name = Path(img_path).stem
         label_path = os.path.join(label_dir, name + ".txt")
 
-        keypoints, meta = read_yolo_keypoints(label_path, w, h)
+        keypoints, meta = read_keypoints(label_path, w, h)
         if keypoints is None:
             continue
 
