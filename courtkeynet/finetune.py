@@ -23,6 +23,9 @@ from utils.dataloader import CourtKeypointDataset
 from utils.metrics import compute_pck, compute_iou
 from utils.visualization import plot_batch
 
+# Internal safetensors support (do not modify)
+from utils._safetensors import save_checkpoint, load_weights as _load_weights
+
 
 # ==================== CONFIGURATION ====================
 # Clean Dataset Location (hardcoded)
@@ -45,14 +48,17 @@ def select_pretrained_weights():
     
     messagebox.showinfo(
         "CourtKeyNet Fine-tuning",
-        "Please select the pretrained weights file (best.pt) from your training run.\n\n"
-        "This should be from runs/courtkeynet/exp_YYYYMMDD_HHMMSS_*/best.pt"
+        "Please select the pretrained weights file (best.pt or best.safetensors) "
+        "from your training run.\n\n"
+        "This should be from runs/courtkeynet/exp_YYYYMMDD_HHMMSS_*/best.*"
     )
     
     filepath = filedialog.askopenfilename(
         title="Select Pretrained Weights",
         initialdir=initial_dir,
         filetypes=[
+            ("Model Weights", "*.pt *.safetensors"),
+            ("SafeTensors", "*.safetensors"),
             ("PyTorch Weights", "*.pt"),
             ("All Files", "*.*")
         ]
@@ -238,11 +244,12 @@ def main():
     
     # Load pretrained weights
     print(f"\nLoading pretrained weights...")
-    ckpt = torch.load(pretrained_path, map_location=device, weights_only=False)
+    ckpt = _load_weights(pretrained_path, device=device)
     model.load_state_dict(ckpt['model'])
     pretrained_epoch = ckpt.get('epoch', 'unknown')
     pretrained_loss = ckpt.get('best_val_loss', 'unknown')
-    print(f"  Loaded from epoch {pretrained_epoch}, best_val_loss={pretrained_loss}")
+    fmt = 'safetensors' if pretrained_path.endswith('.safetensors') else 'pt'
+    print(f"  Loaded [{fmt}] from epoch {pretrained_epoch}, best_val_loss={pretrained_loss}")
     
     num_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
     print(f"Model parameters: {num_params:,}")
@@ -330,16 +337,17 @@ def main():
         if val_metrics['loss'] < best_val_loss:
             best_val_loss = val_metrics['loss']
             epochs_without_improvement = 0
-            checkpoint = {
-                'epoch': epoch + 1,
-                'model': model.state_dict(),
-                'optimizer': optimizer.state_dict(),
-                'best_val_loss': best_val_loss,
-                'config': config,
-                'pretrained_from': pretrained_path
-            }
-            torch.save(checkpoint, save_dir / 'best.pt')
-            print(f"  ✓ Saved best model (val_loss={best_val_loss:.4f})")
+            save_checkpoint(
+                model.state_dict(),
+                str(save_dir / 'best'),
+                extra_metadata={
+                    'epoch': str(epoch + 1),
+                    'best_val_loss': f'{best_val_loss:.6f}',
+                    'stage': 'fine-tuned',
+                    'config': config,
+                },
+            )
+            print(f"  \u2713 Saved best model (val_loss={best_val_loss:.4f}) [.safetensors]")
             
             if wandb_enabled:
                 wandb.run.summary['best_val_loss'] = best_val_loss
@@ -354,35 +362,36 @@ def main():
         
         # Save periodic checkpoint
         if (epoch + 1) % config['train']['save_interval'] == 0:
-            torch.save({
-                'epoch': epoch + 1,
-                'model': model.state_dict(),
-                'optimizer': optimizer.state_dict(),
-                'best_val_loss': best_val_loss,
-                'config': config
-            }, save_dir / f'epoch_{epoch+1}.pt')
+            save_checkpoint(
+                model.state_dict(),
+                str(save_dir / f'epoch_{epoch+1}'),
+                extra_metadata={'epoch': str(epoch + 1), 'stage': 'fine-tuned', 'config': config},
+            )
         
         scheduler.step()
     
     # Save final
-    torch.save({
-        'epoch': config['train']['epochs'],
-        'model': model.state_dict(),
-        'optimizer': optimizer.state_dict(),
-        'best_val_loss': best_val_loss,
-        'config': config
-    }, save_dir / 'last.pt')
+    save_checkpoint(
+        model.state_dict(),
+        str(save_dir / 'last'),
+        extra_metadata={
+            'epoch': str(config['train']['epochs']),
+            'stage': 'fine-tuned',
+            'best_val_loss': f'{best_val_loss:.6f}',
+            'config': config,
+        },
+    )
     
     if wandb_enabled:
         artifact = wandb.Artifact('courtkeynet-finetuned', type='model')
-        artifact.add_file(str(save_dir / 'best.pt'))
+        artifact.add_file(str(save_dir / 'best.safetensors'))
         wandb.log_artifact(artifact)
         wandb.finish()
     
     print("\n" + "=" * 60)
     print(f"  Fine-tuning Complete!")
     print(f"  Best val loss: {best_val_loss:.4f}")
-    print(f"  Weights saved to: {save_dir}")
+    print(f"  Weights saved to: {save_dir}  (.safetensors)")
     print("=" * 60)
 
 

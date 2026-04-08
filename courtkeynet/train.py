@@ -19,6 +19,9 @@ from utils.dataloader import CourtKeypointDataset
 from utils.metrics import compute_pck, compute_iou
 from utils.visualization import plot_batch
 
+# Internal safetensors support (do not modify)
+from utils._safetensors import save_checkpoint, load_weights as _load_weights
+
 
 def train_one_epoch(model, loader, criterion, optimizer, scaler, device, epoch, config, save_dir):
     model.train()
@@ -250,10 +253,11 @@ def main():
     early_stopping_patience = config['train'].get('early_stopping_patience', 20)
     
     if args.resume:
-        ckpt = torch.load(args.resume, map_location=device)
+        ckpt = _load_weights(args.resume, device=device)
         model.load_state_dict(ckpt['model'])
-        optimizer.load_state_dict(ckpt['optimizer'])
-        start_epoch = ckpt['epoch']
+        if 'optimizer' in ckpt:
+            optimizer.load_state_dict(ckpt['optimizer'])
+        start_epoch = ckpt.get('epoch', 0)
         best_val_loss = ckpt.get('best_val_loss', float('inf'))
         print(f"Resumed from epoch {start_epoch}")
     
@@ -290,15 +294,16 @@ def main():
             if val_metrics['loss'] < best_val_loss:
                 best_val_loss = val_metrics['loss']
                 epochs_without_improvement = 0
-                checkpoint = {
-                    'epoch': epoch + 1,
-                    'model': model.state_dict(),
-                    'optimizer': optimizer.state_dict(),
-                    'best_val_loss': best_val_loss,
-                    'config': config
-                }
-                torch.save(checkpoint, save_dir / 'best.pt')
-                print(f"  Saved best model (val_loss={best_val_loss:.4f})")
+                save_checkpoint(
+                    model.state_dict(),
+                    str(save_dir / 'best'),
+                    extra_metadata={
+                        'epoch': str(epoch + 1),
+                        'best_val_loss': f'{best_val_loss:.6f}',
+                        'config': config,
+                    },
+                )
+                print(f"  Saved best model (val_loss={best_val_loss:.4f}) [.safetensors]")
                 
                 if wandb_enabled:
                     wandb.run.summary['best_val_loss'] = best_val_loss
@@ -313,34 +318,34 @@ def main():
         
         # Save periodic checkpoint
         if (epoch + 1) % config['train']['save_interval'] == 0:
-            torch.save({
-                'epoch': epoch + 1,
-                'model': model.state_dict(),
-                'optimizer': optimizer.state_dict(),
-                'best_val_loss': best_val_loss,
-                'config': config
-            }, save_dir / f'epoch_{epoch+1}.pt')
+            save_checkpoint(
+                model.state_dict(),
+                str(save_dir / f'epoch_{epoch+1}'),
+                extra_metadata={'epoch': str(epoch + 1), 'config': config},
+            )
         
         scheduler.step()
     
     # Save final
-    torch.save({
-        'epoch': config['train']['epochs'],
-        'model': model.state_dict(),
-        'optimizer': optimizer.state_dict(),
-        'best_val_loss': best_val_loss,
-        'config': config
-    }, save_dir / 'last.pt')
+    save_checkpoint(
+        model.state_dict(),
+        str(save_dir / 'last'),
+        extra_metadata={
+            'epoch': str(config['train']['epochs']),
+            'best_val_loss': f'{best_val_loss:.6f}',
+            'config': config,
+        },
+    )
     
     if wandb_enabled:
         # Log final model as artifact
         artifact = wandb.Artifact('courtkeynet-model', type='model')
-        artifact.add_file(str(save_dir / 'best.pt'))
+        artifact.add_file(str(save_dir / 'best.safetensors'))
         wandb.log_artifact(artifact)
         wandb.finish()
     
     print(f"\nTraining complete! Best val loss: {best_val_loss:.4f}")
-    print(f"Weights saved to: {save_dir}")
+    print(f"Weights saved to: {save_dir}  (.safetensors)")
 
 
 if __name__ == '__main__':

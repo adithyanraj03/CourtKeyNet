@@ -16,6 +16,14 @@ from tkinter import filedialog, ttk, messagebox
 import threading
 import yaml
 
+# Internal safetensors support (do not modify)
+try:
+    from utils._safetensors import load_weights as _load_weights
+except ImportError:
+    import sys as _sys
+    _sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+    from utils._safetensors import load_weights as _load_weights
+
 # Import CourtKeyNet
 try:
     from models.courtkeynet import CourtKeyNet
@@ -276,7 +284,7 @@ class CourtKeyNetTesterV3:
         # 1. Model Selection
         ttk.Label(controls_panel, text="1. Model Selection", style="Header.TLabel").pack(anchor="w", pady=(0, 8))
         
-        self.btn_load_model = tk.Button(controls_panel, text="📂 Load Weights (.pt)", 
+        self.btn_load_model = tk.Button(controls_panel, text="📂 Load Weights (.pt / .safetensors)", 
                                       bg=self.colors["panel"], fg="white", relief="flat",
                                       command=self.select_model)
         self.btn_load_model.pack(fill="x", pady=3)
@@ -394,11 +402,19 @@ class CourtKeyNetTesterV3:
             
         path = filedialog.askopenfilename(
             initialdir=initial_dir,
-            filetypes=[("PyTorch Models", "*.pt")]
+            filetypes=[
+                ("Model Weights", "*.pt *.safetensors"),
+                ("SafeTensors", "*.safetensors"),
+                ("PyTorch", "*.pt"),
+            ]
         )
         if path:
             self.model_path.set(path)
-            self.lbl_model_status.config(text=os.path.basename(path), foreground=self.colors["success"])
+            fmt = "safetensors" if path.endswith(".safetensors") else "pt"
+            self.lbl_model_status.config(
+                text=f"[{fmt}] {os.path.basename(path)}",
+                foreground=self.colors["success"]
+            )
             try:
                 self.load_model(path)
                 self.check_ready()
@@ -408,10 +424,7 @@ class CourtKeyNetTesterV3:
 
     def load_model(self, path):
         print(f"Loading weights from {path}...")
-        try:
-            ckpt = torch.load(path, map_location=self.device, weights_only=False)
-        except TypeError:
-            ckpt = torch.load(path, map_location=self.device)
+        ckpt = _load_weights(path, device=self.device)
         
         if 'config' in ckpt:
             config = ckpt['config']

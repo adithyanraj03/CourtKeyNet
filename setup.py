@@ -73,6 +73,7 @@ setup(
         "albumentations>=0.5.0",
         "pyyaml>=5.4.0",
         "tqdm>=4.50.0",
+        "safetensors>=0.4.0",
     ],
     ext_modules=[CMakeExtension('courtkeynet_cpp')],
     cmdclass=dict(build_ext=CMakeBuild),
