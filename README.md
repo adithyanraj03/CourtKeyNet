@@ -154,34 +154,7 @@ Checklist:
 ---
 </details>
 
-## Repository Structure
 
-```
-CourtKeyNet/
-├── courtkeynet/
-│   ├── configs/
-│   │   ├── courtkeynet.yaml     # Model hyperparameters
-│   │   └── dataset.yaml         # Dataset configuration
-│   ├── models/
-│   │   ├── __init__.py
-│   │   ├── courtkeynet.py       # Main architecture
-│   │   ├── octave.py            # Octave Feature Extractor
-│   │   ├── polar.py             # Polar Transform Attention
-│   │   └── qcm.py               # Quadrilateral Constraint Module
-│   ├── losses/
-│   │   ├── __init__.py
-│   │   └── geometric_loss.py    # Geometric Consistency Loss
-│   ├── utils/
-│   │   ├── __init__.py
-│   │   ├── dataloader.py        # dataset loader
-│   │   └── metrics.py           # Evaluation metrics
-│   ├── train.py                 # Training script with wandb
-│   ├── finetune.py              # Finetuning script
-│   └── inference.py             # Inference/visualization
-├── datasets/                    # Datasets (submodule)
-├── requirements.txt
-└── README.md
-```
 
 ### Model Download
 
